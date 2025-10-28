@@ -1,0 +1,8 @@
+ const firebaseConfig = {
+    apiKey: "AIzaSyDwXttBNHAjtWVhZg1K57EsWH-QwmYzqiw",
+    authDomain: "tree-kids-school-daily-report.firebaseapp.com",
+    projectId: "tree-kids-school-daily-report",
+    storageBucket: "tree-kids-school-daily-report.firebasestorage.app",
+    messagingSenderId: "433730968555",
+    appId: "1:433730968555:web:667b060e6a9bc7975257ae"
+  };
