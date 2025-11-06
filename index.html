@@ -281,10 +281,10 @@
         let currentReportContext = {};
         let allRecordsCache = []; // Cache for search
 
-        // ★デプロイ用に修正 (重要): 'daily-report-app' の部分は、Netlify FunctionsのappIdと一致させてください
-        const appId = 'daily-report-app'; // ★ 手順書ステップ2-5
+        // ★デプロイ用に修正 (重要): 'daily-report-app-prod' の部分は、Netlify FunctionsのappIdやFirebaseルールと一致させてください
+        const appId = 'daily-report-app-prod'; // ★ 手順書ステップ2-5 (例: 'daily-report-app-prod')
         
-        // ★デプロイ用に修正 (重要): ステップ2-3
+        // ★デプロイ用に修正 (重要): ステップ2-3 (ユーザー提供のConfigに差し替え)
         const firebaseConfig = {
             apiKey: "AIzaSyDwXttBNHAjtWVhZg1K57EsWH-QwmYzqiw",
             authDomain: "tree-kids-school-daily-report.firebaseapp.com",
@@ -333,8 +333,8 @@
         // --- App Initialization --------------------------------------------
         async function initializeAppAndAuth() {
             try {
-                // ★デプロイ用に修正: ユーザーがペーストしたConfigを直接使う
-                if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                // ★デプロイ用に修正: Configが空でないかだけチェック
+                if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "AIzaSy...") {
                     alert("Firebaseの設定が完了していません。index.html ファイル内の `firebaseConfig` 変数を、Firebaseコンソールから取得した設定情報に書き換えてください。");
                     return;
                 }
@@ -347,22 +347,36 @@
                     if (user) {
                         userId = user.uid;
                         console.log("Authenticated with UID:", userId);
-                        initializeAppState(); // <-- アプリの初期化
+                        // ★デプロイ用に修正: 認証成功時にのみ初期化を実行
+                        if (typeof initializeAppState === 'function') {
+                             initializeAppState();
+                        }
                     } else {
                         console.log("User not signed in.");
+                        // ユーザーがいない場合、匿名サインインを試みる
+                        signInAnonymously(auth).catch((error) => {
+                            console.error("Anonymous sign-in failed in listener:", error);
+                            alert("認証に失敗しました。Firebaseの Authentication 設定で「匿名」が有効になっているか確認してください。");
+                        });
                     }
                 });
 
-                // ★デプロイ用に修正: 常に匿名認証を呼び出す (ステップ2-4)
-                await signInAnonymously(auth);
+                // ★デプロイ用に修正: Canvas用の if/else ブロックを削除 (ステップ2-4)
+                // 認証は onAuthStateChanged がハンドルする
+                if (!auth.currentUser) {
+                    await signInAnonymously(auth);
+                }
+
 
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
-                alert("アプリの初期化に失敗しました。");
+                alert(`アプリの初期化に失敗しました: ${error.message}`);
             }
         }
 
         function initializeAppState() {
+            // この関数が呼ばれた時点で認証は完了している
+            console.log("initializeAppState called");
             setupEventListeners();
             datePicker.value = new Date().toISOString().split('T')[0];
             subscribeToUsers();
@@ -372,6 +386,7 @@
 
         // --- Event Listeners -----------------------------------------------
         function setupEventListeners() {
+            console.log("Setting up event listeners...");
             dailyTab.addEventListener('click', () => switchTab('daily'));
             usersTab.addEventListener('click', () => switchTab('users'));
             staffTab.addEventListener('click', () => switchTab('staff'));
@@ -427,6 +442,7 @@
 
         // --- Tab Control ----------------------------------------------------
         function switchTab(activeTab) {
+            console.log("Switching tab to:", activeTab);
             const tabs = { daily: dailyTab, users: usersTab, staff: staffTab };
             const contents = { daily: dailyContent, users: usersContent, staff: staffContent };
 
@@ -452,8 +468,10 @@
         // --- Firestore Subscriptions ---------------------------------------
         function subscribeToUsers() {
             if (unsubscribeUsers) unsubscribeUsers();
+            console.log("Subscribing to users with appId:", appId);
             const usersCollection = collection(db, `artifacts/${appId}/public/data/users`);
             unsubscribeUsers = onSnapshot(usersCollection, (snapshot) => {
+                console.log("Received user snapshot");
                 allUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 allUsers.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
                 renderDailyUserList();
@@ -461,14 +479,18 @@
                 checkIfUsersExist();
             }, (error) => {
                 console.error("Error listening to users:", error);
-                // Handle permission errors, e.g., by alerting the user or logging
+                if (error.code === 'permission-denied') {
+                    alert("データベースへのアクセス権限がありません。FirebaseのFirestoreルールとappIdの設定を確認してください。");
+                }
             });
         }
 
         function subscribeToStaff() {
             if (unsubscribeStaff) unsubscribeStaff();
+             console.log("Subscribing to staff with appId:", appId);
             const staffCollection = collection(db, `artifacts/${appId}/public/data/staff`);
             unsubscribeStaff = onSnapshot(staffCollection, (snapshot) => {
+                console.log("Received staff snapshot");
                 allStaff = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 allStaff.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
                 renderStaffManagementList();
@@ -480,8 +502,10 @@
 
         function subscribeToRecords() {
             if (unsubscribeRecords) unsubscribeRecords();
+             console.log("Subscribing to records with appId:", appId);
             const recordsCollection = collection(db, `artifacts/${appId}/public/data/records`);
             unsubscribeRecords = onSnapshot(recordsCollection, (snapshot) => {
+                console.log("Received records snapshot");
                 dailyRecords = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 allRecordsCache = [...dailyRecords]; // Update cache for search
                 renderDailyUserList();
@@ -1369,6 +1393,9 @@
                 console.error("Error calling Netlify function:", error);
                 reportTextArea.value = `エラーが発生しました: ${error.message}. Netlifyの環境変数（APIキーとサービスアカウント）が正しく設定されているか確認してください。`;
                 revisionButtonsContainer.classList.add('hidden'); // Hide buttons on error
+            } finally {
+                 // ★修正: ローディング表示を確実に消す
+                loader.style.display = 'none';
             }
         }
         
