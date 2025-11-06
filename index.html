@@ -244,7 +244,7 @@
                 <button type="button" class="revision-btn bg-gray-200 text-gray-700 text-sm font-medium py-1 px-3 rounded-full hover:bg-gray-300" data-instruction="rephrase">表現を変えて</button>
             </div>
             <div class="mt-6 flex justify-end space-x-3">
-                <button type="button" id="report-modal-close" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">閉じる</button>
+                <button type="button" id="report-modal-close" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">キャンセル</button>
                 <button type="button" id="save-report-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">報告を記録に保存</button>
                 <button type="button" id="copy-report-btn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700">クリップボードにコピー</button>
             </div>
@@ -281,15 +281,18 @@
         let currentReportContext = {};
         let allRecordsCache = []; // Cache for search
 
-   const appId = 'daily-report-app'; 
- const firebaseConfig = {
-    apiKey: "AIzaSyDwXttBNHAjtWVhZg1K57EsWH-QwmYzqiw",
-    authDomain: "tree-kids-school-daily-report.firebaseapp.com",
-    projectId: "tree-kids-school-daily-report",
-    storageBucket: "tree-kids-school-daily-report.firebasestorage.app",
-    messagingSenderId: "433730968555",
-    appId: "1:433730968555:web:667b060e6a9bc7975257ae"
-  };
+        // ★デプロイ用に修正 (重要): 'daily-report-app' の部分は、Netlify FunctionsのappIdと一致させてください
+        const appId = 'daily-report-app'; // ★ 手順書ステップ2-5
+        
+        // ★デプロイ用に修正 (重要): ステップ2-3
+        const firebaseConfig = {
+            apiKey: "AIzaSyDwXttBNHAjtWVhZg1K57EsWH-QwmYzqiw",
+            authDomain: "tree-kids-school-daily-report.firebaseapp.com",
+            projectId: "tree-kids-school-daily-report",
+            storageBucket: "tree-kids-school-daily-report.firebasestorage.app",
+            messagingSenderId: "433730968555",
+            appId: "1:433730968555:web:667b060e6a9bc7975257ae"
+        };
 
         // --- DOM Elements --------------------------------------------------
         const dailyTab = document.getElementById('tab-daily');
@@ -330,6 +333,11 @@
         // --- App Initialization --------------------------------------------
         async function initializeAppAndAuth() {
             try {
+                // ★デプロイ用に修正: ユーザーがペーストしたConfigを直接使う
+                if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                    alert("Firebaseの設定が完了していません。index.html ファイル内の `firebaseConfig` 変数を、Firebaseコンソールから取得した設定情報に書き換えてください。");
+                    return;
+                }
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 // Removed storage initialization
@@ -339,13 +347,14 @@
                     if (user) {
                         userId = user.uid;
                         console.log("Authenticated with UID:", userId);
-                        initializeAppState();
+                        initializeAppState(); // <-- アプリの初期化
                     } else {
                         console.log("User not signed in.");
                     }
                 });
 
-
+                // ★デプロイ用に修正: 常に匿名認証を呼び出す (ステップ2-4)
+                await signInAnonymously(auth);
 
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
@@ -450,7 +459,10 @@
                 renderDailyUserList();
                 renderUserManagementList();
                 checkIfUsersExist();
-            }, (error) => console.error("Error listening to users:", error));
+            }, (error) => {
+                console.error("Error listening to users:", error);
+                // Handle permission errors, e.g., by alerting the user or logging
+            });
         }
 
         function subscribeToStaff() {
@@ -461,7 +473,9 @@
                 allStaff.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
                 renderStaffManagementList();
                 checkIfStaffExist();
-            }, (error) => console.error("Error listening to staff:", error));
+            }, (error) => {
+                 console.error("Error listening to staff:", error);
+            });
         }
 
         function subscribeToRecords() {
@@ -471,7 +485,9 @@
                 dailyRecords = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 allRecordsCache = [...dailyRecords]; // Update cache for search
                 renderDailyUserList();
-            }, (error) => console.error("Error listening to records:", error));
+            }, (error) => {
+                 console.error("Error listening to records:", error);
+            });
         }
 
         // --- Rendering Functions -------------------------------------------
@@ -863,7 +879,8 @@
             document.getElementById('report-modal-record-id').value = recordId;
 
             openReportModal(true); // true indicates a new report is being generated
-            await generateReportWithAI(user, staffName, activityNotes);
+            // ★デプロイ用に修正: Netlify Function を呼び出す
+            await generateReportWithAI_Netlify(user, staffName, activityNotes);
         }
 
         function handleCopyReportClick() {
@@ -972,7 +989,8 @@
             document.getElementById('report-loader').style.display = 'flex';
             revisionButtonsContainer.classList.add('hidden');
 
-            await generateReportWithAI(
+            // ★デプロイ用に修正: Netlify Function を呼び出す
+            await generateReportWithAI_Netlify(
                 currentReportContext.user,
                 currentReportContext.staffName,
                 currentReportContext.activityNotes,
@@ -1309,149 +1327,54 @@
         }
         // --- End CSV Export Functions ---
 
-
-        async function generateReportWithAI(user, staffName, activityNotes, revisionRequest = null) {
+        // ★デプロイ用に修正: Netlify Functionを呼び出すラッパー関数
+        async function generateReportWithAI_Netlify(user, staffName, activityNotes, revisionRequest = null) {
             const loader = document.getElementById('report-loader');
             const reportTextArea = document.getElementById('report-content');
-
+            
             loader.style.display = 'flex';
-
-            const recentRecords = await getRecentRecordsForUser(user.id);
-            const recentHistory = recentRecords.map(r =>
-                `日付: ${r.date}\n内容:\n宿題: ${r.homework || '記載なし'}\nプリント学習: ${r.worksheet || '記載なし'}\nツリー式学習: ${r.learning || '記載なし'}\nプログラム: ${r.program || '記載なし'}\n自由時間: ${r.freetime || '記載なし'}\n連絡事項・特記事項: ${r.notes || '記載なし'}` // Exclude internal notes here
-            ).join('\n---\n');
-
-            let systemPrompt = `あなたは児童発達支援・放課後等デイサービスのスタッフを支援する、プロのライターアシスタントです。
-子どもたちの一日の活動内容のメモをもとに、保護者向けに自然で丁寧な文体の日報文（ツリー通信）を作成してください。
-
-【日報の構成ルール】
-1. 子どもの名前（敬称は「くん」か「ちゃん」を適切に判断）を冒頭に記載する。
-2. 続けて、担当スタッフ名のあいさつから始めます。その後に改行を2つ入れて、「本日のツリー通信です。」と必ず記載してください。（例：「こんにちは、〇〇です！\\n\\n本日のツリー通信です。」）
-3. 活動内容は「宿題」「プリント学習」「ツリー式学習」「プログラム」「自由時間」「粗大運動」「連絡事項」などに適切に分類し、具体的に記述する。メモに分類名がなくても、内容から推測して分類する。**内部連絡メモの内容は絶対に含めないでください。**
-4. 事実ベースで書き、過度な評価や誇張は避ける。
-5. 表現にバリエーションを持たせ、「楽しそうでした」の繰り返しは避ける。
-6. 日報の末尾に使われがちな定型文（例：「今日も笑顔あふれる一日でした」「また次回も〜」）は**記載しない**。
-7. **絵文字は一切使用しない**。
-8. 文末に「印象的でした。」、「頼もしかったです」、「魅力的でした」という表現は使わない。
-
-【表現スタイル】
-- あたたかく、親しみのある文体で。
-- 評価語（すごい・えらい・上手など）は控えめにし、努力や工夫を事実で伝える。
-- 子どもの様子が自然にイメージできるよう、表情や会話、動作を描写する。
-- 箇条書きではなく、自然な文章で構成する。
-
-【品質向上のための参考例】
-以下の例は、簡潔なメモからどのように様子を具体的に描写するかの良い手本です。この品質を目指してください。
-
----
-入力メモ:
-「たろうくん
-宿題は、国語の漢字ドリルと算数の計算カード
-プログラムは、お月見のうさぎ作り
-自由時間は、パズル」
-
-適切な出力例:
-「たろうくん
-
-こんにちは、〇〇です！
-
-本日のツリー通信です。
-
-宿題では、国語の漢字ドリルと算数の計算カードに取り組みました。漢字は、一文字ずつ丁寧に書こうと意識しており、計算カードもテンポよく読み進めていました。
-プログラムでは、お月見にちなんだうさぎの制作を行いました。耳の形や顔のパーツをバランスよく貼ることにこだわりながら、楽しそうに取り組んでいました。
-自由時間には、パズルを選んでじっくり挑戦していました。ピースをひとつひとつ確かめながら、集中して完成を目指す姿が見られました。」
----
-`;
-            let userQuery;
-
-            if (revisionRequest) {
-                systemPrompt += `\n\nあなたは、一度生成した文章に対して「もう少し詳しく」「もっと簡潔に」「表現を変えて」といった指示を受け取り、文章を修正する能力も持っています。`;
-
-                const instructionText = {
-                    longer: 'もう少し文章を長く、具体的な様子が伝わるようにしてください。',
-                    shorter: 'もっと簡潔に、要点をまとめてください。',
-                    rephrase: '同じ意味で、違う表現を使って文章を書き直してください。'
-                }[revisionRequest.instruction];
-
-                userQuery = `以下の日報を、指示に従って修正してください。元の文脈や良い点は維持しつつ、改善してください。
-
-【指示】
-${instructionText}
-
-【元の日報】
-${revisionRequest.originalReport}
-
-【参考情報：この報告を作成した際の元の日々の活動メモ】
-${activityNotes}
-
-【参考：この子の最近の活動記録】
-${recentHistory || '最近の記録はありません。'}
-`;
-            } else {
-                 userQuery = `以下の情報をもとに、上記のルールに従って保護者向けの日報を作成してください。
-
-【子供の呼び方】
-${user.nickname}
-
-【担当スタッフ】
-${staffName}
-
-【本日の活動内容メモ】
-${activityNotes}
-
-【参考：この子の最近の活動記録】
-${recentHistory || '最近の記録はありません。'}
-`;
-            }
-
-            const apiKey = ""; // This will be handled by the environment
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                systemInstruction: {
-                    parts: [{ text: systemPrompt }]
-                },
-            };
+            revisionButtonsContainer.classList.add('hidden'); // Hide revision buttons during load
 
             try {
-                const response = await fetch(apiUrl, {
+                // Netlify Functionのエンドポイントを呼び出す
+                const response = await fetch('/.netlify/functions/generate-report', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        appId: appId, // ★修正: 固定したappIdを渡す
+                        user: { id: user.id, nickname: user.nickname }, // ユーザーオブジェクト全体ではなく、必要な情報だけを渡す
+                        staffName: staffName,
+                        activityNotes: activityNotes,
+                        revisionRequest: revisionRequest
+                    }),
                 });
 
                 if (!response.ok) {
-                    throw new Error(`API request failed with status ${response.status}`);
+                    const errorBody = await response.json().catch(() => ({ error: "レスポンスの解析に失敗しました。" }));
+                    throw new Error(`AIサーバーとの通信に失敗しました (Status: ${response.status}): ${errorBody.error || response.statusText}`);
                 }
 
                 const result = await response.json();
-                const candidate = result.candidates?.[0];
 
-                if (candidate && candidate.content?.parts?.[0]?.text) {
-                    reportTextArea.value = candidate.content.parts[0].text;
-                    revisionButtonsContainer.classList.remove('hidden');
+                if (result.report) {
+                    reportTextArea.value = result.report;
+                    revisionButtonsContainer.classList.remove('hidden'); // Show revision buttons on success
                 } else {
-                     let errorText = "エラー: レポートの生成に失敗しました。";
-                    if (result.promptFeedback?.blockReason) {
-                        errorText += ` 理由: ${result.promptFeedback.blockReason}`;
-                    }
-                    reportTextArea.value = errorText;
-                    revisionButtonsContainer.classList.add('hidden'); // Hide buttons on error too
+                    throw new Error(result.error || "AIからの応答が不正です。");
                 }
+
             } catch (error) {
-                console.error("Error generating report:", error);
-                reportTextArea.value = `通信エラーが発生しました: ${error.message}. 時間をおいて再度お試しください。`;
-                 revisionButtonsContainer.classList.add('hidden'); // Hide buttons on error too
-            } finally {
-                loader.style.display = 'none';
+                console.error("Error calling Netlify function:", error);
+                reportTextArea.value = `エラーが発生しました: ${error.message}. Netlifyの環境変数（APIキーとサービスアカウント）が正しく設定されているか確認してください。`;
+                revisionButtonsContainer.classList.add('hidden'); // Hide buttons on error
             }
         }
-
+        
         // --- Initialize App ------------------------------------------------
         initializeAppAndAuth();
 
     </script>
 </body>
 </html>
-
