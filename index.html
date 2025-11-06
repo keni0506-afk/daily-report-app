@@ -23,13 +23,15 @@
 
         <!-- ヘッダー -->
         <header class="mb-6">
-            <h1 class="text-3xl font-bold text-gray-900">Tree Kids School Daily Report</h1>
+            <!-- スマホ用にフォントサイズを調整 -->
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Tree Kids School Daily Report</h1>
             <p class="text-gray-600">日々の療育内容を記録し、チームで共有しましょう。</p>
         </header>
 
         <!-- タブ切り替え -->
         <div class="border-b border-gray-200 mb-6">
-            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+            <!-- スマホでタブが多い場合も横スクロールできるように -->
+            <nav class="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
                 <button id="tab-daily" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500">
                     日々の記録
                 </button>
@@ -53,10 +55,11 @@
                  <!-- 検索エリア -->
                 <div class="mb-6 bg-white p-4 rounded-lg shadow-sm">
                     <h3 class="text-lg font-semibold mb-2 text-gray-700">記録検索</h3>
-                    <div class="flex space-x-2">
-                        <input type="text" id="search-input" placeholder="キーワードを入力 (例: 利用者名, パズル, SST)" class="flex-grow border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                        <button id="search-button" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg">検索</button>
-                        <button id="clear-search-button" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg hidden">クリア</button>
+                    <!-- スマホで縦積み、PCで横並び -->
+                    <div class="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
+                        <input type="text" id="search-input" placeholder="キーワードを入力 (例: 利用者名, パズル, SST)" class="flex-grow border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 w-full">
+                        <button id="search-button" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg w-full sm:w-auto">検索</button>
+                        <button id="clear-search-button" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg w-full sm:w-auto hidden">クリア</button>
                     </div>
                     <div id="search-results-container" class="mt-4 hidden">
                          <h4 class="text-md font-semibold text-gray-600 mb-2">検索結果:</h4>
@@ -76,16 +79,18 @@
 
             <!-- 利用者管理タブ -->
             <div id="content-users" class="hidden">
-                 <div class="flex justify-between items-center mb-4">
+                 <!-- スマホで縦積み、PCで横並び -->
+                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 space-y-4 sm:space-y-0">
                      <!-- データエクスポートセクション -->
-                     <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                     <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 w-full sm:w-auto">
                          <h3 class="text-lg font-semibold mb-2 text-gray-700">データエクスポート (CSV)</h3>
-                         <div class="flex space-x-2">
+                         <!-- スマホで縦積み、PCで横並び -->
+                         <div class="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
                              <button id="export-users-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">利用者リスト</button>
                              <button id="export-records-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">全記録データ</button>
                          </div>
                      </div>
-                     <button id="add-user-btn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700">
+                     <button id="add-user-btn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 w-full sm:w-auto">
                          利用者を新規登録
                      </button>
                  </div>
@@ -98,7 +103,7 @@
             <!-- スタッフ管理タブ -->
             <div id="content-staff" class="hidden">
                 <div class="flex justify-end mb-4">
-                    <button id="add-staff-btn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700">
+                    <button id="add-staff-btn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 w-full sm:w-auto">
                         スタッフを新規登録
                     </button>
                 </div>
@@ -113,7 +118,8 @@
     <!-- 利用者登録・編集モーダル -->
     <div id="user-modal" class="fixed inset-0 z-20 hidden items-center justify-center p-4 modal-backdrop">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-            <h3 id="user-modal-title" class="text-2xl font-bold mb-4">利用者を新規登録</h3>
+            <!-- スマホ用にフォントサイズを調整 -->
+            <h3 id="user-modal-title" class="text-xl sm:text-2xl font-bold mb-4">利用者を新規登録</h3>
             <form id="user-form">
                 <input type="hidden" id="user-id">
                 <div class="space-y-4">
@@ -126,9 +132,10 @@
                         <input type="text" id="user-nickname" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                 </div>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" id="user-modal-cancel" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">キャンセル</button>
-                    <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700">保存</button>
+                <!-- スマホでボタンを縦積み -->
+                <div class="mt-6 flex flex-col-reverse sm:flex-row justify-end sm:space-x-3 space-y-2 sm:space-y-0 space-y-reverse">
+                    <button type="button" id="user-modal-cancel" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none w-full sm:w-auto">キャンセル</button>
+                    <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 w-full sm:w-auto">保存</button>
                 </div>
             </form>
         </div>
@@ -137,7 +144,8 @@
      <!-- スタッフ登録・編集モーダル -->
     <div id="staff-modal" class="fixed inset-0 z-20 hidden items-center justify-center p-4 modal-backdrop">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-            <h3 id="staff-modal-title" class="text-2xl font-bold mb-4">スタッフを新規登録</h3>
+            <!-- スマホ用にフォントサイズを調整 -->
+            <h3 id="staff-modal-title" class="text-xl sm:text-2xl font-bold mb-4">スタッフを新規登録</h3>
             <form id="staff-form">
                 <input type="hidden" id="staff-id">
                 <div class="space-y-4">
@@ -146,9 +154,10 @@
                         <input type="text" id="staff-name" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                 </div>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" id="staff-modal-cancel" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">キャンセル</button>
-                    <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700">保存</button>
+                <!-- スマホでボタンを縦積み -->
+                <div class="mt-6 flex flex-col-reverse sm:flex-row justify-end sm:space-x-3 space-y-2 sm:space-y-0 space-y-reverse">
+                    <button type="button" id="staff-modal-cancel" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none w-full sm:w-auto">キャンセル</button>
+                    <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 w-full sm:w-auto">保存</button>
                 </div>
             </form>
         </div>
@@ -156,8 +165,10 @@
 
     <!-- 記録入力モーダル -->
     <div id="record-modal" class="fixed inset-0 z-20 hidden items-center justify-center p-4 modal-backdrop">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-            <h3 id="record-modal-user-name" class="text-2xl font-bold mb-4"></h3>
+        <!-- p-4 sm:p-6 にしてスマホの余白を少し減らす -->
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <!-- スマホ用にフォントサイズを調整 -->
+            <h3 id="record-modal-user-name" class="text-xl sm:text-2xl font-bold mb-4 break-words"></h3>
             <form id="record-form">
                 <input type="hidden" id="record-id">
                 <input type="hidden" id="record-user-id">
@@ -203,13 +214,14 @@
                          <button type="button" id="mark-report-sent-btn" class="w-full bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed">保護者へ報告送信済みとしてマーク</button>
                     </div>
                 </div>
-                <div class="mt-6 flex justify-between items-center">
+                <!-- スマホでボタンを縦積み -->
+                <div class="mt-6 flex flex-col-reverse sm:flex-row justify-between items-center sm:space-x-3 space-y-2 sm:space-y-0 space-y-reverse">
                     <div>
                          <button type="button" id="delete-record-btn" class="text-red-600 hover:text-red-800 text-sm font-medium hidden">この記録を削除</button>
                     </div>
-                    <div class="flex space-x-3">
-                        <button type="button" id="record-modal-cancel" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">キャンセル</button>
-                        <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700">保存</button>
+                    <div class="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0 w-full sm:w-auto">
+                        <button type="button" id="record-modal-cancel" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none w-full sm:w-auto">キャンセル</button>
+                        <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 w-full sm:w-auto">保存</button>
                     </div>
                 </div>
                  <div class="mt-6 border-t pt-6 space-y-2">
@@ -222,8 +234,10 @@
 
     <!-- 保護者向け報告モーダル -->
     <div id="report-modal" class="fixed inset-0 z-20 hidden items-center justify-center p-4 modal-backdrop">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-            <h3 class="text-2xl font-bold mb-4">保護者向け報告（ツリー通信）</h3>
+        <!-- p-4 sm:p-6 にしてスマホの余白を少し減らす -->
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <!-- スマホ用にフォントサイズを調整 -->
+            <h3 class="text-xl sm:text-2xl font-bold mb-4">保護者向け報告（ツリー通信）</h3>
             <input type="hidden" id="report-modal-record-id">
             <div class="relative">
                 <div id="report-loader" class="absolute inset-0 bg-white bg-opacity-75 flex-col items-center justify-center hidden">
@@ -237,16 +251,18 @@
                 <textarea id="report-content" rows="12" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
             </div>
             <!-- Revision Buttons -->
-            <div id="revision-buttons" class="mt-4 flex justify-center space-x-2 hidden">
-                <span class="text-sm text-gray-600 self-center mr-2">AIへの指示:</span>
+            <!-- スマホでボタンが折り返せるように flex-wrap と gap を使用 -->
+            <div id="revision-buttons" class="mt-4 flex flex-wrap justify-center gap-2 hidden">
+                <span class="text-sm text-gray-600 self-center w-full sm:w-auto text-center sm:text-left sm:mr-2">AIへの指示:</span>
                 <button type="button" class="revision-btn bg-gray-200 text-gray-700 text-sm font-medium py-1 px-3 rounded-full hover:bg-gray-300" data-instruction="longer">もう少し詳しく</button>
                 <button type="button" class="revision-btn bg-gray-200 text-gray-700 text-sm font-medium py-1 px-3 rounded-full hover:bg-gray-300" data-instruction="shorter">もっと簡潔に</button>
                 <button type="button" class="revision-btn bg-gray-200 text-gray-700 text-sm font-medium py-1 px-3 rounded-full hover:bg-gray-300" data-instruction="rephrase">表現を変えて</button>
             </div>
-            <div class="mt-6 flex justify-end space-x-3">
-                <button type="button" id="report-modal-close" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">キャンセル</button>
-                <button type="button" id="save-report-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">報告を記録に保存</button>
-                <button type="button" id="copy-report-btn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700">クリップボードにコピー</button>
+            <!-- スマホでボタンを縦積み -->
+            <div class="mt-6 flex flex-col-reverse sm:flex-row justify-end sm:space-x-3 space-y-2 sm:space-y-0 space-y-reverse">
+                <button type="button" id="report-modal-close" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none w-full sm:w-auto">閉じる</button>
+                <button type="button" id="save-report-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 w-full sm:w-auto">報告を記録に保存</button>
+                <button type="button" id="copy-report-btn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 w-full sm:w-auto">クリップボードにコピー</button>
             </div>
         </div>
     </div>
@@ -256,9 +272,10 @@
         <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6" onclick="event.stopPropagation()">
             <h3 class="text-lg font-bold mb-4" id="confirm-modal-title">確認</h3>
             <p id="confirm-modal-message" class="text-gray-700 mb-6">この操作を続けてもよろしいですか？</p>
-            <div class="flex justify-end space-x-3">
-                <button type="button" id="confirm-modal-cancel" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">キャンセル</button>
-                <button type="button" id="confirm-modal-ok" class="bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700">削除する</button>
+            <!-- スマホでボタンを縦積み -->
+            <div class="flex flex-col-reverse sm:flex-row justify-end sm:space-x-3 space-y-2 sm:space-y-0 space-y-reverse">
+                <button type="button" id="confirm-modal-cancel" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none w-full sm:w-auto">キャンセル</button>
+                <button type="button" id="confirm-modal-ok" class="bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 w-full sm:w-auto">削除する</button>
             </div>
         </div>
     </div>
@@ -334,7 +351,7 @@
         async function initializeAppAndAuth() {
             try {
                 // ★デプロイ用に修正: Configが空でないかだけチェック
-                if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "AIzaSy...") {
+                if (!firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("AIzaSy...")) { // apiKey startsWith check added for safety
                     alert("Firebaseの設定が完了していません。index.html ファイル内の `firebaseConfig` 変数を、Firebaseコンソールから取得した設定情報に書き換えてください。");
                     return;
                 }
@@ -348,7 +365,8 @@
                         userId = user.uid;
                         console.log("Authenticated with UID:", userId);
                         // ★デプロイ用に修正: 認証成功時にのみ初期化を実行
-                        if (typeof initializeAppState === 'function') {
+                        if (typeof initializeAppState === 'function' && !window.appInitialized) { // Add flag to prevent double init
+                             window.appInitialized = true;
                              initializeAppState();
                         }
                     } else {
@@ -552,17 +570,27 @@
                 const checkedAttr = reportSent ? 'checked' : '';
 
                 return `
-                    <div class="bg-white p-4 rounded-lg shadow-sm flex items-center justify-between ${sentClass}">
-                        <label class="report-sent-checkbox-label flex items-center">
-                            <input type="checkbox" class="report-sent-checkbox h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                                   data-user-id="${user.id}" data-record-id="${recordId || ''}" ${checkedAttr} ${checkboxDisabled}>
-                             ${isPresent ? '<span class="report-sent-label-text ml-1">報告済</span>' : ''}
-                             <span class="font-bold text-lg ml-3">${user.name}</span>
-                        </label>
-                        <div class="flex items-center space-x-2">
-                            <button class="attendance-btn ${attendance === 'home' ? 'bg-green-500 text-white' : 'bg-gray-200'} px-3 py-1 rounded-full text-sm" data-user-id="${user.id}" data-attendance="home">ホーム</button>
-                            <button class="attendance-btn ${attendance === 'search' ? 'bg-yellow-500 text-white' : 'bg-gray-200'} px-3 py-1 rounded-full text-sm" data-user-id="${user.id}" data-attendance="search">サーチ</button>
-                            ${isPresent ? `<button class="record-input-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-sm" data-user-id="${user.id}">記録入力</button>` : ''}
+                    <div class="bg-white p-4 rounded-lg shadow-sm ${sentClass}">
+                        <!-- スマホ用にレイアウト調整 -->
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                            <!-- Left Side: Checkbox + Name -->
+                            <label class="report-sent-checkbox-label flex items-center mb-3 sm:mb-0">
+                                <input type="checkbox" class="report-sent-checkbox h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                    data-user-id="${user.id}" data-record-id="${recordId || ''}" ${checkedAttr} ${checkboxDisabled}>
+                                
+                                <div class="flex flex-col ml-3">
+                                    <span class="font-bold text-lg">${user.name}</span>
+                                    ${isPresent ? `<span class="report-sent-label-text ${reportSent ? 'text-green-600 font-medium' : ''}">${reportSent ? '✓ 報告済' : '報告済'}</span>` : ''}
+                                </div>
+                            </label>
+                            
+                            <!-- Right Side: Buttons -->
+                            <!-- スマホでは右寄せ、ボタンサイズを少し調整 -->
+                            <div class="flex items-center space-x-2 flex-shrink-0 self-end sm:self-center">
+                                <button class="attendance-btn ${attendance === 'home' ? 'bg-green-500 text-white' : 'bg-gray-200'} px-3 py-1.5 sm:py-1 rounded-full text-sm" data-user-id="${user.id}" data-attendance="home">ホーム</button>
+                                <button class="attendance-btn ${attendance === 'search' ? 'bg-yellow-500 text-white' : 'bg-gray-200'} px-3 py-1.5 sm:py-1 rounded-full text-sm" data-user-id="${user.id}" data-attendance="search">サーチ</button>
+                                ${isPresent ? `<button class="record-input-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 sm:py-1 rounded-full text-sm" data-user-id="${user.id}">記録入力</button>` : ''}
+                            </div>
                         </div>
                     </div>`;
             };
@@ -602,14 +630,15 @@
 
             allUsers.forEach(user => {
                 const card = `
-                    <div class="bg-white p-4 rounded-lg shadow-sm flex items-center justify-between">
-                        <div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm flex flex-col sm:flex-row justify-between sm:items-center">
+                        <div class="mb-2 sm:mb-0">
                             <p class="font-bold text-lg">${user.name}</p>
                             <p class="text-sm text-gray-600">呼び方: ${user.nickname}</p>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <button class="edit-user-btn bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full text-sm" data-user-id="${user.id}">編集</button>
-                            <button class="delete-user-btn bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded-full text-sm" data-user-id="${user.id}">削除</button>
+                        <!-- スマホではボタンを右寄せ -->
+                        <div class="flex items-center space-x-2 self-end sm:self-auto">
+                            <button class="edit-user-btn bg-gray-200 hover:bg-gray-300 px-3 py-1.5 sm:py-1 rounded-full text-sm" data-user-id="${user.id}">編集</button>
+                            <button class="delete-user-btn bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 sm:py-1 rounded-full text-sm" data-user-id="${user.id}">削除</button>
                         </div>
                     </div>`;
                 userManagementList.insertAdjacentHTML('beforeend', card);
@@ -625,11 +654,12 @@
 
             allStaff.forEach(staff => {
                 const card = `
-                    <div class="bg-white p-4 rounded-lg shadow-sm flex items-center justify-between">
-                        <p class="font-bold text-lg">${staff.name}</p>
-                        <div class="flex items-center space-x-2">
-                            <button class="edit-staff-btn bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full text-sm" data-staff-id="${staff.id}">編集</button>
-                            <button class="delete-staff-btn bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded-full text-sm" data-staff-id="${staff.id}">削除</button>
+                    <div class="bg-white p-4 rounded-lg shadow-sm flex flex-col sm:flex-row justify-between sm:items-center">
+                        <p class="font-bold text-lg mb-2 sm:mb-0">${staff.name}</p>
+                        <!-- スマホではボタンを右寄せ -->
+                        <div class="flex items-center space-x-2 self-end sm:self-auto">
+                            <button class="edit-staff-btn bg-gray-200 hover:bg-gray-300 px-3 py-1.5 sm:py-1 rounded-full text-sm" data-staff-id="${staff.id}">編集</button>
+                            <button class="delete-staff-btn bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 sm:py-1 rounded-full text-sm" data-staff-id="${staff.id}">削除</button>
                         </div>
                     </div>`;
                 staffManagementList.insertAdjacentHTML('beforeend', card);
@@ -681,7 +711,7 @@
                             <span class="font-semibold text-blue-600">${user.name}</span>
                             <span class="text-sm text-gray-500">${record.date}</span>
                         </div>
-                        <p class="text-sm text-gray-600">${snippet}</p>
+                        <p class="text-sm text-gray-600 break-words">${snippet}</p>
                     </div>`;
                 searchResultsDiv.insertAdjacentHTML('beforeend', card);
             });
