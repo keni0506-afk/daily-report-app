@@ -15,6 +15,16 @@
         .report-sent-checkbox-label { display: flex; align-items: center; cursor: pointer; }
         .report-sent-checkbox { transform: scale(1.2); margin-right: 0.5rem; }
         .report-sent-label-text { font-size: 0.75rem; /* text-xs */ color: #4a5568; /* text-gray-600 */ }
+        /* アクティブなフィルターボタンのスタイル */
+        .filter-btn-active {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+            font-weight: 600;
+        }
+        .filter-btn-inactive {
+            background-color: #e0e7ff; /* indigo-100 */
+            color: #3730a3; /* indigo-800 */
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen">
@@ -53,7 +63,7 @@
                     <input type="date" id="date-picker" class="border-gray-300 rounded-md shadow-sm">
                 </div>
                  <!-- 検索エリア -->
-                <div class="mb-6 bg-white p-4 rounded-lg shadow-sm">
+                <div class="mb-4 bg-white p-4 rounded-lg shadow-sm">
                     <h3 class="text-lg font-semibold mb-2 text-gray-700">記録検索</h3>
                     <!-- スマホで縦積み、PCで横並び -->
                     <div class="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
@@ -68,6 +78,16 @@
                          </div>
                     </div>
                 </div>
+                <!-- ★所属フィルター -->
+                <div class="mb-4 bg-white p-4 rounded-lg shadow-sm">
+                    <h3 class="text-lg font-semibold mb-2 text-gray-700">表示フィルター</h3>
+                    <div id="affiliation-filter-buttons" class="flex flex-wrap gap-2">
+                        <button class="filter-btn filter-btn-active py-2 px-4 rounded-lg text-sm" data-filter="all">すべて表示</button>
+                        <button class="filter-btn filter-btn-inactive py-2 px-4 rounded-lg text-sm" data-filter="home">ホーム所属</button>
+                        <button class="filter-btn filter-btn-inactive py-2 px-4 rounded-lg text-sm" data-filter="search">サーチ所属</button>
+                    </div>
+                </div>
+                
                 <!-- 日付ごとのリスト表示エリア -->
                 <div id="daily-view-container">
                     <div id="daily-user-list" class="space-y-3">
@@ -130,6 +150,16 @@
                     <div>
                         <label for="user-nickname" class="block text-sm font-medium text-gray-700">呼び方 (ツリー通信で使うお名前)</label>
                         <input type="text" id="user-nickname" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <!-- ★所属事業所 -->
+                    <div>
+                        <label for="user-affiliation" class="block text-sm font-medium text-gray-700">所属事業所</label>
+                        <select id="user-affiliation" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white">
+                            <option value="none">未設定</option>
+                            <option value="home">ホーム</option>
+                            <option value="search">サーチ</option>
+                            <option value="both">ホーム＆サーチ</option> <!-- ★「両方」を「ホーム＆サーチ」に変更 -->
+                        </select>
                     </div>
                 </div>
                 <!-- スマホでボタンを縦積み -->
@@ -297,6 +327,7 @@
         let unsubscribeUsers = null, unsubscribeRecords = null, unsubscribeStaff = null;
         let currentReportContext = {};
         let allRecordsCache = []; // Cache for search
+        let currentFilter = 'all'; // ★ 'all', 'home', 'search'
 
         // ★デプロイ用に修正 (重要): 'daily-report-app-prod' の部分は、Netlify FunctionsのappIdやFirebaseルールと一致させてください
         const appId = 'daily-report-app-prod'; // ★ 手順書ステップ2-5 (例: 'daily-report-app-prod')
@@ -344,6 +375,7 @@
         const dailyViewContainer = document.getElementById('daily-view-container');
         const exportUsersBtn = document.getElementById('export-users-btn');
         const exportRecordsBtn = document.getElementById('export-records-btn');
+        const filterButtonContainer = document.getElementById('affiliation-filter-buttons');
         // Removed photo related DOM elements
 
 
@@ -431,6 +463,9 @@
                     handleSearchClick();
                 }
             });
+
+            // ★フィルターボタンのリスナー
+            filterButtonContainer.addEventListener('click', handleFilterClick);
 
             // Add event listener for the daily list container (event delegation)
             dailyUserList.addEventListener('change', handleReportSentToggle);
@@ -538,6 +573,18 @@
             dailyUserList.innerHTML = '';
             if (allUsers.length === 0) return;
 
+            // ★フィルター処理
+            const filteredUsers = allUsers.filter(user => {
+                const affiliation = user.affiliation || 'none';
+                if (currentFilter === 'home') {
+                    return affiliation === 'home' || affiliation === 'both';
+                }
+                if (currentFilter === 'search') {
+                    return affiliation === 'search' || affiliation === 'both';
+                }
+                return true; // 'all'
+            });
+
             const selectedDate = datePicker.value;
             const recordsForDate = dailyRecords.filter(r => r.date === selectedDate);
 
@@ -545,7 +592,8 @@
             const searchUsers = [];
             const unregisteredUsers = [];
 
-            allUsers.forEach(user => {
+            // ★フィルターされたユーザー (filteredUsers) を元にリストを作成
+            filteredUsers.forEach(user => {
                 const userRecord = recordsForDate.find(r => r.userId === user.id);
                 const attendance = userRecord ? userRecord.attendance : 'none';
                 const reportSent = userRecord ? userRecord.reportSent : false;
@@ -568,6 +616,8 @@
                 const isPresent = attendance === 'home' || attendance === 'search';
                 const checkboxDisabled = !isPresent ? 'disabled' : '';
                 const checkedAttr = reportSent ? 'checked' : '';
+                // ★修正: reportSentTextを動的に変更
+                const reportSentText = reportSent ? '✓ 報告済' : '';
 
                 return `
                     <div class="bg-white p-4 rounded-lg shadow-sm ${sentClass}">
@@ -579,8 +629,10 @@
                                     data-user-id="${user.id}" data-record-id="${recordId || ''}" ${checkedAttr} ${checkboxDisabled}>
                                 
                                 <div class="flex flex-col ml-3">
-                                    <span class="font-bold text-lg">${user.name}</span>
-                                    ${isPresent ? `<span class="report-sent-label-text ${reportSent ? 'text-green-600 font-medium' : ''}">${reportSent ? '✓ 報告済' : '報告済'}</span>` : ''}
+                                    <!-- ★修正: 氏名の隣に呼び方を表示 -->
+                                    <span class="font-bold text-lg">${user.name} <span class="text-sm text-gray-500 font-normal ml-2">(${user.nickname})</span></span>
+                                    <!-- ★修正: チェックが入っている時だけ「✓ 報告済」を表示 -->
+                                    ${isPresent ? `<span class="report-sent-label-text ${reportSent ? 'text-green-600 font-medium' : ''}">${reportSentText}</span>` : ''}
                                 </div>
                             </label>
                             
@@ -596,13 +648,15 @@
             };
 
             if (homeUsers.length > 0) {
-                finalHtml += `<div class="mb-4"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">ホーム出席者</h3><div class="space-y-3">`;
+                // ★修正: 見出しに人数を追加
+                finalHtml += `<div class="mb-4"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">ホーム出席者 (${homeUsers.length}名)</h3><div class="space-y-3">`;
                 homeUsers.forEach(data => finalHtml += renderUserCard(data.user, data.attendance, data.reportSent, data.recordId));
                 finalHtml += `</div></div>`;
             }
 
             if (searchUsers.length > 0) {
-                finalHtml += `<div class="mb-4"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">サーチ出席者</h3><div class="space-y-3">`;
+                // ★修正: 見出しに人数を追加
+                finalHtml += `<div class="mb-4"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">サーチ出席者 (${searchUsers.length}名)</h3><div class="space-y-3">`;
                 searchUsers.forEach(data => finalHtml += renderUserCard(data.user, data.attendance, data.reportSent, data.recordId));
                 finalHtml += `</div></div>`;
             }
@@ -616,6 +670,10 @@
                 unregisteredUsers.forEach(data => finalHtml += renderUserCard(data.user, data.attendance, data.reportSent, null));
                 finalHtml += `</div>`;
             }
+            
+            if (filteredUsers.length === 0) {
+                 finalHtml = '<p class="text-center text-gray-500 py-8">該当する所属の利用者がいません。</p>';
+            }
 
             dailyUserList.innerHTML = finalHtml;
 
@@ -628,12 +686,22 @@
             userManagementList.innerHTML = '';
              if (allUsers.length === 0) return;
 
+             const affiliationMap = {
+                'home': 'ホーム',
+                'search': 'サーチ',
+                'both': 'ホーム＆サーチ', // ★「両方」を「ホーム＆サーチ」に変更
+                'none': '未設定'
+            };
+
             allUsers.forEach(user => {
+                const affiliationText = affiliationMap[user.affiliation || 'none'];
                 const card = `
                     <div class="bg-white p-4 rounded-lg shadow-sm flex flex-col sm:flex-row justify-between sm:items-center">
                         <div class="mb-2 sm:mb-0">
                             <p class="font-bold text-lg">${user.name}</p>
                             <p class="text-sm text-gray-600">呼び方: ${user.nickname}</p>
+                            <!-- ★所属事業所を表示 -->
+                            <p class="text-sm text-gray-600">所属: <span class="font-medium text-gray-800">${affiliationText}</span></p>
                         </div>
                         <!-- スマホではボタンを右寄せ -->
                         <div class="flex items-center space-x-2 self-end sm:self-auto">
@@ -770,6 +838,7 @@
             const user = {
                 name: document.getElementById('user-name').value,
                 nickname: document.getElementById('user-nickname').value,
+                affiliation: document.getElementById('user-affiliation').value, // ★所属を保存
             };
             try {
                 const userRef = id ? doc(db, `artifacts/${appId}/public/data/users`, id) : doc(collection(db, `artifacts/${appId}/public/data/users`));
@@ -1122,12 +1191,33 @@
             }
         }
 
+        // ★フィルター処理
+        function handleFilterClick(e) {
+            if (!e.target.classList.contains('filter-btn')) return;
+
+            // Remove active class from all buttons
+            filterButtonContainer.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('filter-btn-active');
+                btn.classList.add('filter-btn-inactive');
+            });
+            
+            // Add active class to clicked button
+            const clickedButton = e.target;
+            clickedButton.classList.add('filter-btn-active');
+            clickedButton.classList.remove('filter-btn-inactive');
+            
+            // Update filter state and re-render
+            currentFilter = clickedButton.dataset.filter;
+            renderDailyUserList();
+        }
+
 
         // --- Modal Control Functions ---------------------------------------
         function openUserModalForCreate() {
             userForm.reset();
             document.getElementById('user-id').value = '';
             document.getElementById('user-modal-title').textContent = '利用者を新規登録';
+            document.getElementById('user-affiliation').value = 'none'; // ★デフォルト所属
             userModal.style.display = 'flex';
         }
 
@@ -1136,6 +1226,7 @@
             document.getElementById('user-id').value = user.id;
             document.getElementById('user-name').value = user.name;
             document.getElementById('user-nickname').value = user.nickname;
+            document.getElementById('user-affiliation').value = user.affiliation || 'none'; // ★所属を読み込む
             document.getElementById('user-modal-title').textContent = '利用者情報を編集';
             userModal.style.display = 'flex';
         }
@@ -1306,11 +1397,19 @@
                 alert("エクスポートする利用者がいません。");
                 return;
             }
-            const headers = ["利用者ID", "氏名", "呼び方"];
+            const headers = ["利用者ID", "氏名", "呼び方", "所属事業所"];
+            const affiliationMap = {
+                'home': 'ホーム',
+                'search': 'サーチ',
+                'both': 'ホーム＆サーチ', // ★「両方」を「ホーム＆サーチ」に変更
+                'none': '未設定'
+            };
+
             const rows = allUsers.map(user => [
                 escapeCSV(user.id),
                 escapeCSV(user.name),
-                escapeCSV(user.nickname)
+                escapeCSV(user.nickname),
+                escapeCSV(affiliationMap[user.affiliation || 'none']) // ★所属を追加
             ]);
 
             let csvContent = headers.join(",") + "\n";
@@ -1338,17 +1437,23 @@
                 return nameA.localeCompare(nameB, 'ja');
             });
 
+            const affiliationMap = {
+                'home': 'ホーム',
+                'search': 'サーチ',
+                'both': 'ホーム＆サーチ', // ★「両方」を「ホーム＆サーチ」に変更
+                'none': '未設定'
+            };
 
             const headers = [
-                "記録ID", "日付", "利用者ID", "利用者名", "出席場所",
+                "記録ID", "日付", "利用者ID", "利用者名", "所属事業所", "出席場所",
                 "宿題", "プリント学習", "ツリー式学習", "プログラム", "自由時間",
                 "連絡事項(保護者)", "内部メモ", "担当スタッフ", /* Removed Photo URL */ "報告済み",
                 "保存した報告文"
-                // Timestamps can be added if needed: "作成日時", "最終更新日時"
             ];
             const rows = sortedRecords.map(record => {
                  const user = allUsers.find(u => u.id === record.userId);
                  const userName = user ? user.name : '不明';
+                 const userAffiliation = user ? affiliationMap[user.affiliation || 'none'] : '不明';
                  const attendanceMap = {'home': 'ホーム', 'search': 'サーチ', 'none': '未選択', undefined: '未選択'};
 
                  return [
@@ -1356,6 +1461,7 @@
                     escapeCSV(record.date),
                     escapeCSV(record.userId),
                     escapeCSV(userName),
+                    escapeCSV(userAffiliation), // ★所属を追加
                     escapeCSV(attendanceMap[record.attendance] || record.attendance), // Handle 'none' or undefined
                     escapeCSV(record.homework),
                     escapeCSV(record.worksheet),
